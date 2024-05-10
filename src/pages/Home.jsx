@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Grid from '@mui/material/Grid';
@@ -6,55 +6,103 @@ import Grid from '@mui/material/Grid';
 import { Post } from '../components/Post';
 import { TagsBlock } from '../components/TagsBlock';
 import { CommentsBlock } from '../components/CommentsBlock';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchComments, fetchPosts, fetchTags } from '../redux/slices/PostSlice';
+import { useParams } from 'react-router-dom';
 
 export const Home = () => {
+  const { data } = useSelector((state) => state.auth);
+
+  // const isTagUrl = location.pathname.includes('/tags/');
+  const { tag } = useParams();
+
+  // console.log(location.pathname.includes('/tags/'));
+
+  const dispatch = useDispatch();
+  const [activeSort, setActiveSort] = useState(0);
+  useEffect(() => {
+    console.log(tag);
+    dispatch(fetchPosts({ activeSort, tag }));
+    if (tag) {
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSort, tag]);
+
+  useEffect(() => {
+    dispatch(fetchTags());
+    dispatch(fetchComments());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { posts, tags, comments } = useSelector((state) => state.posts);
+
+  const isPostLoading = posts.status;
+  const isTagsLoading = tags.status;
+  const isCommentsLoading = comments.status;
+  // console.log(isPostLoading);
+
+  const sortList = ['Новые', 'Популярные'];
+
+  console.log(activeSort);
+
   return (
     <>
       <Tabs style={{ marginBottom: 15 }} value={0} aria-label="basic tabs example">
-        <Tab label="Новые" />
-        <Tab label="Популярные" />
+        {sortList.map((item, i) => {
+          return <Tab onClick={() => setActiveSort(i)} label={item} />;
+        })}
+        {/* <Tab label="Новые" /> */}
+        {/* <Tab label="Популярные" /> */}
       </Tabs>
       <Grid container spacing={4}>
         <Grid xs={8} item>
-          {[...Array(5)].map(() => (
-            <Post
-              id={1}
-              title="Roast the code #1 | Rock Paper Scissors"
-              imageUrl="https://res.cloudinary.com/practicaldev/image/fetch/s--UnAfrEG8--/c_imagga_scale,f_auto,fl_progressive,h_420,q_auto,w_1000/https://dev-to-uploads.s3.amazonaws.com/uploads/articles/icohm5g0axh9wjmu4oc3.png"
-              user={{
-                avatarUrl:
-                  'https://res.cloudinary.com/practicaldev/image/fetch/s--uigxYVRB--/c_fill,f_auto,fl_progressive,h_50,q_auto,w_50/https://dev-to-uploads.s3.amazonaws.com/uploads/user/profile_image/187971/a5359a24-b652-46be-8898-2c5df32aa6e0.png',
-                fullName: 'Keff',
-              }}
-              createdAt={'12 июня 2022 г.'}
-              viewsCount={150}
-              commentsCount={3}
-              tags={['react', 'fun', 'typescript']}
-              isEditable
-            />
-          ))}
+          {(isPostLoading === 'loading' ? [...Array(5)] : posts.items).map((item, i) =>
+            isPostLoading === 'loaded' ? (
+              <Post
+                _id={item._id}
+                title={item.title}
+                imageUrl={item.imageUrl}
+                user={item.user}
+                createdAt={item.createdAt}
+                viewsCount={item.viewsCount}
+                comments={item.comments}
+                tags={item.tags}
+                isEditable={data?._id === item.user._id}
+              />
+            ) : (
+              <Post isLoading={true} key={i} />
+            ),
+          )}
         </Grid>
         <Grid xs={4} item>
-          <TagsBlock items={['react', 'typescript', 'заметки']} isLoading={false} />
-          <CommentsBlock
-            items={[
-              {
-                user: {
-                  fullName: 'Вася Пупкин',
-                  avatarUrl: 'https://mui.com/static/images/avatar/1.jpg',
+          {isTagsLoading === 'loading' ? (
+            <TagsBlock items={['react', 'typescript', 'заметки']} isLoading />
+          ) : (
+            <TagsBlock items={tags.items} isLoading={false} />
+          )}
+          {isCommentsLoading === ' loading' ? (
+            <CommentsBlock
+              items={[
+                {
+                  user: {
+                    fullName: 'Вася Пупкин',
+                    avatarUrl: 'https://mui.com/static/images/avatar/1.jpg',
+                  },
+                  text: 'Это тестовый комментарий',
                 },
-                text: 'Это тестовый комментарий',
-              },
-              {
-                user: {
-                  fullName: 'Иван Иванов',
-                  avatarUrl: 'https://mui.com/static/images/avatar/2.jpg',
+                {
+                  user: {
+                    fullName: 'Иван Иванов',
+                    avatarUrl: 'https://mui.com/static/images/avatar/2.jpg',
+                  },
+                  text: 'When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top',
                 },
-                text: 'When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top',
-              },
-            ]}
-            isLoading={false}
-          />
+              ]}
+              isLoading={true}
+            />
+          ) : (
+            <CommentsBlock items={comments.items} isLoading={false} />
+          )}
         </Grid>
       </Grid>
     </>

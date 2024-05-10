@@ -1,12 +1,12 @@
-import React from "react";
+import React from 'react';
 
-import styles from "./AddComment.module.scss";
+import styles from './AddComment.module.scss';
 
-import TextField from "@mui/material/TextField";
-import Avatar from "@mui/material/Avatar";
-import Button from "@mui/material/Button";
+import TextField from '@mui/material/TextField';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
 
-export const Index = () => {
+export const Index = ({ value, setValue, onSubmit }) => {
   return (
     <>
       <div className={styles.root}>
@@ -16,13 +16,17 @@ export const Index = () => {
         />
         <div className={styles.form}>
           <TextField
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
             label="Написать комментарий"
             variant="outlined"
             maxRows={10}
             multiline
             fullWidth
           />
-          <Button variant="contained">Отправить</Button>
+          <Button onClick={() => onSubmit()} variant="contained">
+            Отправить
+          </Button>
         </div>
       </div>
     </>
